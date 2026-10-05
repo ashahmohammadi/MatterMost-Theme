@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HostIran Mattermost Telegram Theme
 // @namespace    http://tampermonkey.net/
-// @version      10.2
+// @version      10.3
 // @author       A.Shahmohammadi
 // @match        https://message.hostiran.com/*
 // @updateURL    https://raw.githubusercontent.com/ashahmohammadi/MatterMost-Theme/main/mattermost-telegram-theme.user.js
@@ -273,7 +273,14 @@
     }
     `;
 
+    // Re-running the script (desktop launcher after an update) replaces the
+    // previous copy instead of stacking a second style and observer.
+    const oldStyle = document.getElementById('tg-theme-style');
+    if (oldStyle) oldStyle.remove();
+    if (window.__tgThemeObserver) window.__tgThemeObserver.disconnect();
+
     const styleEl = document.createElement('style');
+    styleEl.id = 'tg-theme-style';
     styleEl.appendChild(document.createTextNode(telegramCSS));
     document.documentElement.appendChild(styleEl);
 
@@ -336,7 +343,8 @@
         });
     }
 
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+    window.__tgThemeObserver = new MutationObserver(schedule);
+    window.__tgThemeObserver.observe(document.body, { childList: true, subtree: true });
     loadMe();
     schedule();
 })();
